@@ -1,8 +1,8 @@
 # Order Matching Engine Simulator with Real-Time Observability Dashboard
 
-- Built a real-time order matching engine with interactive dashboard, user controls and system performance metrics.
-- Visualized order flow, trade execution and backend behaviour under simulated market load.
-- Improved system observability by tracking latency, throughput and match rate in real time.
+📎 Built a real-time order matching engine with interactive dashboard, user controls and system performance metrics.
+📎 Visualized order flow, trade execution and backend behaviour under simulated market load.
+📎 Improved system observability by tracking latency, throughput and match rate in real time.
 
 ## 🔺 Features
 ### 1. Core Engine
