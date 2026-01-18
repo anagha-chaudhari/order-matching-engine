@@ -1,77 +1,75 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from uuid import uuid4
-import requests
 
 from matching_engine.engine import OrderBook
 from matching_engine.models import Order
-from matching_engine.schemas import(
-    OrderCreate,
-    OrderResponse,
-    CancelResponse,
-    TradeResponse,
-    OrderBookSnapshot
-)
+from matching_engine.events import EventStream
+from matching_engine.metrics import Metrics
+from matching_engine.market_simulator import MarketSimulator
 
-app = FastAPI(title="Trade order matching engine")
+app = FastAPI(title="Real-Time Market Simulator")
 
-engine = OrderBook()
+event_stream = EventStream()
+metrics = Metrics()
 
-@app.post("/orders/", response_model=OrderResponse)
-def create_order(order: OrderCreate):
-    new_order = Order(
+engine = OrderBook(event_stream=event_stream, metrics=metrics)
+
+simulator = MarketSimulator(engine)
+simulator.start()
+
+
+@app.post("/orders")
+def create_order(payload: dict):
+    order = Order(
         id=str(uuid4()),
-        side=order.side.lower(),
-        price=order.price,
-        quantity=order.quantity
+        side=payload["side"],
+        price=float(payload["price"]),
+        quantity=int(payload["quantity"]),
     )
 
-    try:
-        engine.add_order(new_order)
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) 
-    
-    return new_order
+    engine.add_order(order)
+    return {"id": order.id}
 
 
-@app.delete("/orders/{order_id}", response_model=CancelResponse)
-def cancel_order(order_id:str):
-    success = engine.cancel_order(order_id)
-
-    if not success:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    return {"success": True}
-
-@app.get("/orderbook", response_model=OrderBookSnapshot)
-def get_orderbook():
+@app.get("/orderbook")
+def orderbook():
     return engine.get_orderbook_snapshot()
 
-@app.get("/trades", response_model=list[TradeResponse])
-def get_trades():
+
+@app.get("/trades")
+def trades():
     return engine.get_trades()
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
 
-AI_SERVICE_URL = "http://127.0.0.1:8001/ai/recommend"
-@app.post("/recommend")
-def recommend_order(order: OrderCreate):
-    orderbook = engine.get_orderbook_snapshot()
+@app.get("/events")
+def events():
+    return event_stream.get_latest()
 
-    payload = {
-        "orderbook": orderbook,
-        "order": {
-            "price": order.price,
-            "quantity": order.quantity
-        }
-    }
+@app.get("/metrics")
+def get_metrics():
+    return metrics.snapshot()
 
-    try:
-        res = requests.post(AI_SERVICE_URL, json=payload, timeout=3)
-        res.raise_for_status()
-        return res.json()
+@app.post("/load/{level}")
+def set_load(level: str):
+    if level not in ["low", "medium", "high"]:
+        return {"error": "Invalid level"}
 
-    except requests.exceptions.RequestException:
-        raise HTTPException(status_code=503, detail="AI service unavailable")
+    simulator.set_load(level)
+    return {"status": f"Load set to {level}"}
+
+@app.post("/speed/{delay}")
+def set_speed(delay: float):
+    simulator.set_speed(delay)
+    return {"status": f"Speed set to {delay}s delay"}
+
+
+@app.post("/pause")
+def pause_market():
+    simulator.pause()
+    return {"status": "Market paused"}
+
+
+@app.post("/resume")
+def resume_market():
+    simulator.resume()
+    return {"status": "Market resumed"}

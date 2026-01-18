@@ -1,138 +1,203 @@
 import streamlit as st
 import requests
+import time
 
 API_BASE = "http://127.0.0.1:8000"
 
-st.set_page_config(page_title="Trade Engine", layout="wide")
+st.set_page_config(page_title="Market Simulator", layout="wide")
 
-# -------------------------------
+# -------------------------------------------------
+# Styling
+# -------------------------------------------------
+st.markdown("""
+<style>
+.title { font-size: 34px; font-weight: 600; }
+.section { font-size: 22px; font-weight: 600; margin-top: 10px; }
+.box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 6px; }
+.event-trade { background: #d4edda; padding: 8px; border-radius: 6px; margin-bottom: 6px; }
+.event-order { background: #f1f3f5; padding: 6px; border-radius: 6px; margin-bottom: 4px; }
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------------------------
 # Header
-# -------------------------------
-st.title("Trade Matching Engine")
-st.caption("Deterministic engine with ML-based execution advisory")
+# -------------------------------------------------
+st.markdown('<div class="title">Real-Time Market Simulator</div>', unsafe_allow_html=True)
+st.caption("Interactive dashboard for order matching engine with live metrics and controls")
 
 st.divider()
 
-# -------------------------------
-# Place Order
-# -------------------------------
-st.subheader("Place Order")
+# -------------------------------------------------
+# Market Controls
+# -------------------------------------------------
+st.markdown('<div class="section">Market Controls</div>', unsafe_allow_html=True)
 
-c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
+c1, c2, c3 = st.columns([2, 1, 1])
 
 with c1:
-    side = st.selectbox("Side", ["buy", "sell"])
+    speed = st.slider("Market Speed (lower = faster)", 0.05, 1.5, 0.5, 0.05)
+    if st.button("Apply Speed"):
+        try:
+            requests.post(f"{API_BASE}/speed/{speed}")
+            st.success(f"Speed updated to {speed}s delay")
+        except:
+            st.error("Backend unreachable")
 
 with c2:
-    price = st.number_input("Price", value=100.0, step=1.0)
+    if st.button("Pause Market", use_container_width=True):
+        try:
+            requests.post(f"{API_BASE}/pause")
+            st.success("Market paused")
+        except:
+            st.error("Pause failed")
 
 with c3:
-    quantity = st.number_input("Quantity", value=10, step=1)
+    if st.button("Resume Market", use_container_width=True):
+        try:
+            requests.post(f"{API_BASE}/resume")
+            st.success("Market resumed")
+        except:
+            st.error("Resume failed")
 
-with c4:
-    place = st.button("Place Order", use_container_width=True)
+st.divider()
 
-if place:
+# -------------------------------------------------
+# Sidebar: Manual order
+# -------------------------------------------------
+st.sidebar.header("Manual Order")
+
+side = st.sidebar.selectbox("Side", ["buy", "sell"])
+price = st.sidebar.number_input("Price", value=100.0, step=0.5)
+quantity = st.sidebar.number_input("Quantity", value=5, step=1)
+
+if st.sidebar.button("Submit Order", use_container_width=True):
     payload = {"side": side, "price": price, "quantity": quantity}
     try:
         res = requests.post(f"{API_BASE}/orders", json=payload)
         if res.status_code == 200:
-            short_id = res.json()["id"][:8]
-            st.success(f"Order placed successfully (ID: {short_id})")
+            st.sidebar.success("Order sent to engine")
         else:
-            st.error(res.text)
+            st.sidebar.error("Order rejected")
     except:
-        st.error("Backend not reachable")
+        st.sidebar.error("Backend unreachable")
+
+# -------------------------------------------------
+# Safe fetch helper
+# -------------------------------------------------
+def safe_get(endpoint):
+    try:
+        r = requests.get(f"{API_BASE}/{endpoint}", timeout=2)
+        if r.status_code == 200:
+            return r.json()
+    except:
+        return None
+    return None
+
+orderbook = safe_get("orderbook") or {"buy_orders": [], "sell_orders": []}
+trades = safe_get("trades") or []
+events = safe_get("events") or []
+metrics = safe_get("metrics") or {}
+
+# -------------------------------------------------
+# Metrics
+# -------------------------------------------------
+st.markdown('<div class="section">System Performance</div>', unsafe_allow_html=True)
+
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Total Orders", metrics.get("orders", 0))
+m2.metric("Total Trades", metrics.get("trades", 0))
+m3.metric("Orders/sec", metrics.get("orders_per_sec", 0))
+m4.metric("Latency (ms)", metrics.get("avg_latency_ms", 0))
+
+m5, m6 = st.columns(2)
+m5.metric("Trades/sec", metrics.get("trades_per_sec", 0))
+m6.metric("Match Rate", f"{metrics.get('match_rate_percent', 0)}%")
 
 st.divider()
 
-# -------------------------------
-# AI Advisory
-# -------------------------------
-st.subheader("Execution Advisory (ML)")
+# -------------------------------------------------
+# Market Overview
+# -------------------------------------------------
+st.markdown('<div class="section">Market Overview</div>', unsafe_allow_html=True)
 
-if st.button("Analyze Order"):
-    payload = {"side": side, "price": price, "quantity": quantity}
+last_price = trades[-1]["price"] if trades else None
 
-    try:
-        res = requests.post(f"{API_BASE}/recommend", json=payload)
+buy_prices = [o["price"] for o in orderbook["buy_orders"]]
+sell_prices = [o["price"] for o in orderbook["sell_orders"]]
 
-        if res.status_code == 200:
-            prob = float(res.json()["fill_probability"])
+best_bid = max(buy_prices) if buy_prices else None
+best_ask = min(sell_prices) if sell_prices else None
 
-            st.metric("Estimated Fill Probability", f"{int(prob*100)}%")
+spread = round(best_ask - best_bid, 4) if best_bid and best_ask else None
+recent_volume = sum(t["quantity"] for t in trades[-20:]) if trades else 0
 
-            # Simple, interpretable advice
-            if prob >= 0.7:
-                st.success("Good conditions – high likelihood of quick execution.")
-            elif prob >= 0.45:
-                st.warning("Moderate conditions – execution may take time.")
-            else:
-                st.error("Low likelihood of execution – consider adjusting price.")
+o1, o2, o3 = st.columns(3)
 
-        else:
-            st.error("AI service error")
-
-    except:
-        st.error("Could not reach backend")
+o1.metric("Last Price", last_price if last_price else "-")
+o2.metric("Bid–Ask Spread", spread if spread is not None else "-")
+o3.metric("Recent Volume", recent_volume)
 
 st.divider()
 
-# -------------------------------
-# Orderbook
-# -------------------------------
-st.subheader("Order Book")
+# -------------------------------------------------
+# Orderbook + Events
+# -------------------------------------------------
+left, right = st.columns([2, 2])
 
-if st.button("Refresh Order Book"):
-    try:
-        res = requests.get(f"{API_BASE}/orderbook")
-        data = res.json()
+with left:
+    st.markdown('<div class="section">Order Book</div>', unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
+    b1, b2 = st.columns(2)
 
-        with col1:
-            st.markdown("**Buy Orders**")
-            if data["buy_orders"]:
-                st.dataframe(data["buy_orders"], use_container_width=True)
-            else:
-                st.caption("No buy orders")
+    with b1:
+        st.markdown("**Buy Orders**")
+        st.dataframe(orderbook["buy_orders"], height=260, use_container_width=True)
 
-        with col2:
-            st.markdown("**Sell Orders**")
-            if data["sell_orders"]:
-                st.dataframe(data["sell_orders"], use_container_width=True)
-            else:
-                st.caption("No sell orders")
+    with b2:
+        st.markdown("**Sell Orders**")
+        st.dataframe(orderbook["sell_orders"], height=260, use_container_width=True)
 
-    except:
-        st.error("Failed to fetch order book")
+with right:
+    st.markdown('<div class="section">Engine Activity</div>', unsafe_allow_html=True)
+
+    for e in events[:20]:
+        if "Trade executed" in e:
+            st.markdown(f"<div class='event-trade'>🟢 {e}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div class='event-order'>• {e}</div>", unsafe_allow_html=True)
 
 st.divider()
 
-# -------------------------------
-# Trades
-# -------------------------------
-st.subheader("Executed Trades")
 
-if st.button("Refresh Trades"):
-    try:
-        res = requests.get(f"{API_BASE}/trades")
-        trades = res.json()
+# -------------------------------------------------
+# Volume Chart
+# -------------------------------------------------
+st.markdown('<div class="section">Trade Volume</div>', unsafe_allow_html=True)
 
-        if trades:
-            # Show short IDs
-            formatted = []
-            for t in trades:
-                formatted.append({
-                    "buy_id": t["buy_order_id"][:8],
-                    "sell_id": t["sell_order_id"][:8],
-                    "price": t["price"],
-                    "quantity": t["quantity"]
-                })
+if trades:
+    volumes = [t["quantity"] for t in trades[-150:]]
+    st.bar_chart(volumes, height=200, use_container_width=True)
+else:
+    st.caption("Waiting for trades...")
 
-            st.dataframe(formatted, use_container_width=True)
-        else:
-            st.caption("No trades executed yet")
+st.divider()
 
-    except:
-        st.error("Failed to fetch trades")
+# -------------------------------------------------
+# Recent Trades
+# -------------------------------------------------
+st.markdown('<div class="section">Recent Trades</div>', unsafe_allow_html=True)
+
+if trades:
+    for t in reversed(trades[-10:]):
+        st.markdown(
+            f"<div class='box'>Trade: {t['quantity']} @ {t['price']}</div>",
+            unsafe_allow_html=True
+        )
+else:
+    st.caption("No trades yet")
+
+# -------------------------------------------------
+# Auto refresh
+# -------------------------------------------------
+time.sleep(1)
+st.rerun()
