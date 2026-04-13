@@ -6,7 +6,7 @@ A real-time order matching engine with an interactive observability dashboard. S
 
 ## Stack
 
-Python 3.10 · FastAPI · Streamlit · WebSocket · Docker · pytest · GitHub Actions
+Python | FastAPI | Streamlit | WebSocket | Docker | GitHub Actions
 
 ---
 
@@ -33,16 +33,8 @@ Python 3.10 · FastAPI · Streamlit · WebSocket · Docker · pytest · GitHub A
 **Infrastructure**
 - REST + WebSocket APIs — HTTP for standard queries, WebSocket for real-time push
 - Containerized with Docker Compose (two-service setup)
-- CI pipeline via GitHub Actions — runs on every push
+- CI pipeline via GitHub Actions 
 
-## Architecture
-
-```mermaid
-flowchart TD
-
-    subgraph CLIENT["Client Layer"]
-    ...
-```
 ---
 
 ## Run locally
