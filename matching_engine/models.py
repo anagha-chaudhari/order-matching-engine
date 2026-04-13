@@ -10,6 +10,8 @@ class Order:
     quantity: int
     timestamp: float = field(default_factory=time.time)
 
+    # Time priority - if two orders have the same price, the one with smaller (earlier) timestamp gets priority
+
     # Price time priority - implemented using heap with a custom sort_index where buy orders are sorted by -price (higher first) and sell orders by price (lower first) along with timestamp
 
     def __post_init__(self):

@@ -5,7 +5,7 @@ from .models import Order, Trade
 
 
 class OrderBook:
-    def __init__(self, event_stream=None, metrics=None):
+    def __init__(self, event_stream=None, metrics=None): # *dependency injection
         self.buy_orders: List[Order] = []
         self.sell_orders: List[Order] = []
         self.trades: List[Trade] = []
@@ -14,7 +14,7 @@ class OrderBook:
         self.metrics = metrics
 
     def add_order(self, order: Order):
-        start = time.time()
+        start = time.time() # measure time the moment order enters the system (latency measurement later)
 
         if self.metrics:
             self.metrics.record_order()
@@ -31,7 +31,7 @@ class OrderBook:
                 f"Order received: {order.side.upper()} {order.quantity} @ {order.price}"
             )
 
-        self.match_orders(start)
+        self.match_orders(start) # every order placement triggers one attempt at matching
 
     def match_orders(self, start_time):
         while self.buy_orders and self.sell_orders:
@@ -42,7 +42,7 @@ class OrderBook:
                 break
 
             qty = min(best_buy.quantity, best_sell.quantity)
-            price = best_sell.price
+            price = best_sell.price # the trade should happen at seller's price
 
             trade = Trade(
                 buy_order_id=best_buy.id,
@@ -53,6 +53,7 @@ class OrderBook:
 
             self.trades.append(trade)
 
+            # deduct traded quantity from orders
             best_buy.quantity -= qty
             best_sell.quantity -= qty
 
@@ -62,6 +63,7 @@ class OrderBook:
             if best_sell.quantity == 0:
                 heapq.heappop(self.sell_orders)
 
+            # calculation of latency
             latency = time.time() - start_time
 
             if self.metrics:
@@ -72,7 +74,7 @@ class OrderBook:
                     f"Trade executed: {qty} @ {price} (latency {int(latency * 1000)} ms)"
                 )
 
-    def get_orderbook_snapshot(self):
+    def get_orderbook_snapshot(self): # read the book without modifying it
         return {
             "buy_orders": [
                 {"price": o.price, "quantity": o.quantity}
@@ -84,7 +86,7 @@ class OrderBook:
             ],
         }
 
-    def get_trades(self):
+    def get_trades(self): # return trade history
         return [
             {
                 "buy_order_id": t.buy_order_id,

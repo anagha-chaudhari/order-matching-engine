@@ -1,0 +1,33 @@
+# .dockerignore
+
+# Python cache files — never needed inside container
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments — container has its own Python
+venv/
+env/
+.venv/
+
+# Pytest cache
+.pytest_cache/
+
+# Git files — not needed in container
+.git/
+.gitignore
+
+# Docker files themselves — no need to copy these into the container
+Dockerfile
+Dockerfile.streamlit
+docker-compose.yml
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

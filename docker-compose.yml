@@ -1,0 +1,53 @@
+
+services:
+
+  # ── Service 1: FastAPI matching engine ──────────────────────
+  engine:
+    # Build using Dockerfile in current directory (.)
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Map port 8000 on your machine to port 8000 in the container
+    # Format: "your_machine_port:container_port"
+    # So http://localhost:8000 on your browser reaches the container
+    ports:
+      - "8000:8000"
+
+    # Restart automatically if it crashes
+    restart: unless-stopped
+
+    # Health check — Docker periodically checks if the service is healthy
+    # curl -f = fail silently if server not ready
+    # interval: check every 30 seconds
+    # timeout: give up after 10 seconds
+    # retries: try 3 times before marking unhealthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Service 2: Streamlit dashboard ──────────────────────────
+  app:
+    # Build using Dockerfile.streamlit
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+
+    ports:
+      - "8501:8501"
+
+    # This service depends on engine being started first
+    # Docker will start engine before dashboard
+    depends_on:
+      - engine
+
+    # Environment variable — tells the dashboard where the API is
+    # Inside Docker network, services talk to each other by SERVICE NAME
+    # not localhost. So dashboard reaches FastAPI at http://engine:8000
+    # not http://localhost:8000
+    environment:
+      - API_BASE=http://engine:8000
+
+    restart: unless-stopped
