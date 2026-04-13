@@ -1,46 +1,81 @@
-# 🧩 Order Matching Engine Simulator with Real-Time Observability Dashboard
+# Order Matching Engine — Real-Time Market Simulator
 
-- Built a real-time order matching engine with interactive dashboard, user controls and system performance metrics.
-- Visualized order flow, trade execution and backend behaviour under simulated market load.
-- Improved system observability by tracking latency, throughput and match rate in real time.
+A real-time order matching engine with an interactive observability dashboard. Simulates how a stock exchange core works — price-time priority matching, partial fills, live trade visualization, and system performance tracking under continuous market load.
 
-## 🔺 Features
-### 1. Core Engine
-- deterministic price-time priority matching engine
-- supports buy/sell orders and partial fills
-- real time trade execution
-- event stream for engine activity
+---
 
-### 2. Market Simulation
-- background market simulator generating realistic order flow
-- adjustable simulation speed (pause/resume controls for inspection)
+## Stack
 
-### 3. Dashboard
-- Streamlit UI
-- live order book(bids/asks)
-- executed trades view
-- real time event log of orders and trades
-- live volume chart
-- market overview indicators (last traded price, bid-ask spread, recent volume)
-- manual order placement
+Python 3.10 · FastAPI · Streamlit · WebSocket · Docker · pytest · GitHub Actions
 
-### 4. Performance Metrics
-- orders processed
-- trades executed
-- orders per second
-- trades per second
-- average matching latency (ms)
-- match rate (%)
+---
 
-## 🔺 Tech Stack
-- Python 3.10+
-- FastAPI
-- Streamlit
-- Requests
-- Heap-based data structures
+## Features
 
-## Future improvements
-- dockerize
-- websocket support
-- basic test suite engine
-- ci pipeline for automated checks
+**Core engine**
+- Deterministic price-time priority matching via heap-based order book
+- Supports buy/sell limit orders and partial fills
+- Real-time trade execution with event stream for engine activity
+
+**Market simulation**
+- Background daemon thread generating realistic order flow via random walk pricing
+- Adjustable simulation speed, pause/resume controls for inspection
+
+**Dashboard**
+- Live order book (bids/asks), executed trades view, real-time event log
+- Live volume chart and market overview (last traded price, bid-ask spread, recent volume)
+- Manual order placement via sidebar
+
+**Performance metrics**
+- Orders processed, trades executed, orders/sec, trades/sec
+- Average matching latency (ms), match rate (%)
+
+**Infrastructure**
+- REST + WebSocket APIs — HTTP for standard queries, WebSocket for real-time push
+- Containerized with Docker Compose (two-service setup)
+- CI pipeline via GitHub Actions — runs on every push
+
+## Architecture
+
+```mermaid
+flowchart TD
+
+    subgraph CLIENT["Client Layer"]
+    ...
+```
+---
+
+## Run locally
+
+```bash
+pip install -r requirements.txt
+
+# Terminal 1
+python -m uvicorn matching_engine.main:app --reload
+
+# Terminal 2
+streamlit run ui/dashboard.py
+```
+
+## Run with Docker
+
+```bash
+docker compose up --build
+```
+
+Dashboard → `http://localhost:8501`
+API docs → `http://localhost:8000/docs`
+
+---
+
+## Tests
+
+```bash
+pytest tests/ -v
+```
+
+Covers full match, partial fill (both sides), no-match on price gap,
+multi-order sweep, time priority at equal prices, invalid input and trade ID correctness.
+
+---
+
