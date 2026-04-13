@@ -1,5 +1,7 @@
 # Order Matching Engine — Real-Time Market Simulator
 
+![CI](https://github.com/anagha-chaudhari/order-matching-engine/actions/workflows/ci.yml/badge.svg)
+
 A real-time order matching engine with an interactive observability dashboard. Simulates how a stock exchange core works — price-time priority matching, partial fills, live trade visualization, and system performance tracking under continuous market load.
 
 ---
