@@ -39,7 +39,9 @@ Python | FastAPI | Streamlit | WebSocket | Docker | GitHub Actions
 
 ---
 
-<img width="971" height="1319" alt="ordermatchingengine drawio" src="https://github.com/user-attachments/assets/cc1a9f32-17b4-4310-aa0d-5380585f4024" />
+## Diagram
+
+<img width="971" height="1319" alt="matchingengine drawio" src="https://github.com/user-attachments/assets/f08815f4-c21f-4a30-96d5-0e7a564bd82d" />
 
 ---
 
