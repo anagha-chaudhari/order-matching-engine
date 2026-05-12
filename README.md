@@ -45,6 +45,10 @@ Python | FastAPI | Streamlit | WebSocket | Docker | GitHub Actions
 
 ---
 
+<img width="1907" height="895" alt="image" src="https://github.com/user-attachments/assets/e1dea116-4d87-4767-ad5a-4b45ecf19dac" />
+<img width="1906" height="958" alt="image" src="https://github.com/user-attachments/assets/9749f580-4c51-4c47-b20d-da566c645c67" />
+<img width="1907" height="945" alt="image" src="https://github.com/user-attachments/assets/936583dd-5014-4090-8999-39933c1c3e07" />
+
 ## Run locally
 
 ```bash
