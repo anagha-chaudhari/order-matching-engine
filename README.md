@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/anagha-chaudhari/order-matching-engine/actions/workflows/ci.yml/badge.svg)
 
-A real-time order matching engine with an interactive observability dashboard. Simulates how a stock exchange core works — price-time priority matching, partial fills, live trade visualization, and system performance tracking under continuous market load.
+There is no easy way to see how an exchange actually works under the hood. Order matching is at the core of every stock exchange, but it's mostly a black box. This project makes it observable - a full engine with real price-time priority matching, live market simulation and a dashboard that shows exactly what is happening as trades execute. It also tracks system under load.
 
 ---
 
