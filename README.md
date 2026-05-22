@@ -33,7 +33,7 @@ Python | FastAPI | Streamlit | WebSocket | Docker | GitHub Actions
 - Average matching latency (ms), match rate (%)
 
 **Infrastructure**
-- REST + WebSocket APIs — HTTP for standard queries, WebSocket for real-time push
+- REST + WebSocket APIs: HTTP for standard queries, WebSocket for real-time push
 - Containerized with Docker Compose (two-service setup)
 - CI pipeline via GitHub Actions 
 
@@ -45,9 +45,9 @@ Python | FastAPI | Streamlit | WebSocket | Docker | GitHub Actions
 
 ---
 
-<img width="1907" height="895" alt="image" src="images/page1.png" />
-<img width="1906" height="958" alt="image" src="images/page2.png" />
-<img width="1907" height="945" alt="image" src="images/page3.png" />
+<img width="1907" height="895" alt="image" src="images/image1.png">
+<img width="1907" height="895" alt="image" src="images/image2.png">
+
 
 ## Run locally
 
