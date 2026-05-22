@@ -58,7 +58,7 @@ pip install -r requirements.txt
 python -m uvicorn matching_engine.main:app --reload
 
 # Terminal 2
-streamlit run ui/dashboard.py
+streamlit run ui/app.py
 ```
 
 ## Run with Docker
