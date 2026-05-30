@@ -39,12 +39,6 @@ Python | FastAPI | Streamlit | WebSocket | Docker | GitHub Actions
 
 ---
 
-## Diagram
-
-<img width="971" height="1319" alt="matchingengine" src="images/arch.png" />
-
----
-
 <img width="1907" height="895" alt="image" src="images/image1.png">
 <img width="1907" height="895" alt="image" src="images/image2.png">
 
